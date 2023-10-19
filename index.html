@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <title>Notes Web App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center text-light header">Notes Web App</h1>
+
+            <!-- Search Bar to search -->
+        <label for="searchInput"></label><input type="text" id="searchInput" placeholder="Search for notes..." class="form-control mt-4">
+                    <!-- Add Note Button and Filters -->
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">Add Note</button>
+                        <div class="filter-buttons">
+                        <a href="?FilterWith=name" class="btn btn-secondary">Sort by Name</a>
+                        <a href="?FilterWith=id" class="btn btn-secondary">Sort by ID</a>
+                        </div>
+                    </div>
+                    <!-- Add Note Modal -->
+                    <div class="modal fade" id="addNoteModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Add Note</h5>
+                                </div>
+                                <div class="modal-body">
+                                    <form method="post" enctype="multipart/form-data">
+                                        <label for="title">Title:</label>
+                                        <input type="text" id="title" name="title" class="form-control">
+                                        <label for="content">Content:</label>
+                                        <textarea id="content" name="content" class="form-control"></textarea>
+                                        <label for="image">Image:</label>
+                                        <input type="file" id="image" name="image" class="form-control">
+                                        <button type="submit" class="btn btn-success mt-2">Submit</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- List Notes -->
+                    <div class="list-group mt-4">
+                        {% for note_dict in notes %}
+                            {% for note_id, note in note_dict.items() %}
+                                <!-- Note Item for every note that exists in the database-->
+                                <div class="list-group-item note-list-item">
+                                    <!-- Image -->
+                                    {% if note.image_url %}
+                                        <img src="{{ note.image_url }}" alt="{{ note.title }} image" class="note-image">
+                                    {% endif %}
+                                    <!-- Note Details -->
+                                    <div class="note-details">
+                                        <h4>{{ note.title }}</h4>
+                                        <pre class="note-content">{{ note.content }}</pre>
+                                        <span class="note-id">ID: #{{ note_id }}</span>
+                                        <div class="action-buttons">
+                                            <!-- Edit Button -->
+                                            <button class="btn btn-primary edit-button" data-bs-toggle="modal" data-bs-target="#editNoteModal-{{ note_id }}">Edit</button>
+                                            <!-- Delete Button -->
+                                            <form action="{{ url_for('delete_note', note_id=note_id) }}" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                    <!-- Edit Note Pop-Up -->
+                    <div class="modal fade" id="editNoteModal-{{ note_id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Note</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="{{ url_for('edit_note', note_id=note_id) }}" method="post" enctype="multipart/form-data">
+                                        <label for="new_title">New Title:</label>
+                                        <input type="text" name="new_title" id="new_title" class="form-control" placeholder="New title" value="{{ note.title }}">
+                                        <label for="new_content">New Content:</label>
+                                        <textarea name="new_content" id="new_content" class="form-control">{{ note.content }}</textarea>
+                                        <label for="new_image">New Image:</label>
+                                        <input type="file" name="new_image" id="new_image" class="form-control">
+                                        <button type="submit" class="btn btn-success mt-3">Update</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+        <!-- Scripts for Bootstrap-->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Scripts for filtering by -->
+        <script>
+        // Get the input field and note cards
+        const searchInput = document.getElementById('searchInput');
+        const noteItems = document.querySelectorAll('.note-list-item');
+
+        // event listener for searching
+        searchInput.addEventListener('input', function() {
+            const query = searchInput.value.toLowerCase();
+
+            noteItems.forEach(item => {
+                const title = item.querySelector('h4').innerText.toLowerCase();
+                const content = item.querySelector('.note-content').innerText.toLowerCase();
+                const id = item.querySelector('.note-id').innerText.toLowerCase();
+
+                if (id.includes(query) || title.includes(query) || content.includes(query)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        </script>
+</body>
+</html>
